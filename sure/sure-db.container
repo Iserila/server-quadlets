@@ -1,0 +1,17 @@
+[Unit]
+Description=Sure Database
+
+[Container]
+Image=docker.io/library/postgres:16
+ContainerName=sure-db
+Volume=/opt/sure/db:/var/lib/postgresql/data:Z
+Environment=POSTGRES_USER=sure_user
+Environment=POSTGRES_DB=sure_production
+Secret=sure_db_password,type=env,target=POSTGRES_PASSWORD
+Network=homelab
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

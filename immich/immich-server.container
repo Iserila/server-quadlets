@@ -1,0 +1,29 @@
+[Unit]
+Description=Immich Server
+After=immich-db.service immich-redis.service
+
+[Container]
+Image=ghcr.io/immich-app/immich-server:release
+AutoUpdate=registry
+ContainerName=immich-server
+Network=homelab
+PublishPort=2283:2283
+# ENV
+Environment=TZ=Europe/Amsterdam
+Environment=PUID=1000
+Environment=PGID=1000
+# Environment=DB_HOSTNAME=localhost
+Environment=DB_USERNAME=immich
+Environment=DB_DATABASE_NAME=immich
+# Environment=REDIS_HOSTNAME=localhost
+Environment=DB_HOSTNAME=immich-db
+Environment=REDIS_HOSTNAME=immich-redis
+Secret=immich_db_password,type=env,target=DB_PASSWORD
+Volume=/opt/immich/upload:/data:Z
+Volume=/mnt/data/photos:/data/library:Z
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

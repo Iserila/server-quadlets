@@ -1,0 +1,17 @@
+[Unit]
+Description=AdventureLog Frontend
+After=adventurelog-backend.service
+
+[Container]
+Image=ghcr.io/seanmorley15/adventurelog-frontend:latest
+ContainerName=adventurelog-frontend
+Environment=PUBLIC_SERVER_URL=http://adventurelog-backend:8000
+Environment=ORIGIN=https://adventures.irisa.dev
+Environment=BODY_SIZE_LIMIT=Infinity
+Network=homelab
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

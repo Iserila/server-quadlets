@@ -1,0 +1,14 @@
+[Unit]
+Description=Sure Redis
+
+[Container]
+Image=docker.io/library/redis:latest
+ContainerName=sure-redis
+Volume=/opt/sure/redis:/data:Z
+Network=homelab
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

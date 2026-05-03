@@ -1,0 +1,27 @@
+[Unit]
+Description=Sure Worker
+After=sure-db.service sure-redis.service
+
+[Container]
+Image=ghcr.io/we-promise/sure:stable
+ContainerName=sure-worker
+Exec=bundle exec sidekiq
+Volume=/opt/sure/storage:/rails/storage
+Environment=POSTGRES_USER=sure_user
+Environment=POSTGRES_DB=sure_production
+Environment=SELF_HOSTED=true
+Environment=RAILS_FORCE_SSL=false
+Environment=RAILS_ASSUME_SSL=false
+Environment=DB_HOST=sure-db
+Environment=DB_PORT=5432
+Environment=REDIS_URL=redis://sure-redis:6379/1
+Secret=sure_db_password,type=env,target=POSTGRES_PASSWORD
+Secret=sure_secret_key_base,type=env,target=SECRET_KEY_BASE
+DNS=8.8.8.8
+Network=homelab
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

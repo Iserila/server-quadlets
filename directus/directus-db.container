@@ -1,0 +1,17 @@
+[Unit]
+Description=Directus Database
+
+[Container]
+Image=docker.io/library/postgres:16
+ContainerName=directus-db
+Volume=/opt/directus/database/postgres:/var/lib/postgresql/data:Z
+Environment=POSTGRES_USER=directus
+Environment=POSTGRES_DB=directus
+Secret=directus_db_password,type=env,target=POSTGRES_PASSWORD
+Network=homelab
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

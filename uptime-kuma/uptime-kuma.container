@@ -1,0 +1,15 @@
+[Unit]
+Description=Uptime Kuma
+
+[Container]
+Image=docker.io/louislam/uptime-kuma:latest
+AutoUpdate=registry
+ContainerName=uptime-kuma
+Volume=/opt/uptime-kuma/data:/app/data:Z
+Network=homelab
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

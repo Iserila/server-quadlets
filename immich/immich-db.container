@@ -1,0 +1,31 @@
+[Unit]
+Description=Immich Database
+
+[Container]
+Image=docker.io/tensorchord/pgvecto-rs:pg14-v0.2.0
+AutoUpdate=registry
+ContainerName=immich-db
+Network=homelab
+Volume=/opt/immich/db:/var/lib/postgresql/data:Z
+
+# ENV
+Environment=TZ=Europe/Amsterdam
+Environment=PUID=1000
+Environment=PGID=1000
+# Environment=DB_HOSTNAME=localhost
+Environment=DB_USERNAME=immich
+Environment=DB_DATABASE_NAME=immich
+# Environment=REDIS_HOSTNAME=localhost
+Secret=immich_db_password,type=env,target=DB_PASSWORD
+# Test
+Environment=DB_HOSTNAME=localhost
+Environment=POSTGRES_USER=immich
+Environment=POSTGRES_USER=immich
+Environment=POSTGRES_DB=immich
+Secret=immich_db_password,type=env,target=POSTGRES_PASSWORD
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

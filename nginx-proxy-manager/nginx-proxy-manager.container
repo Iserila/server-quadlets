@@ -1,0 +1,20 @@
+[Unit]
+Description=Nginx Proxy Manager
+After=local-fs.target
+
+[Container]
+Image=docker.io/jc21/nginx-proxy-manager:latest
+AutoUpdate=registry
+AddHost=host-gateway:host-gateway
+PublishPort=80:80
+PublishPort=443:443
+PublishPort=81:81
+Volume=/opt/proxy/data:/data:Z
+Volume=/opt/proxy/letsencrypt:/etc/letsencrypt:Z
+Network=homelab
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,17 @@
+[Unit]
+Description=AdventureLog Database
+
+[Container]
+Image=docker.io/postgis/postgis:16-3.5
+ContainerName=adventurelog-db
+Volume=/opt/adventurelog/db:/var/lib/postgresql/data:Z
+Environment=POSTGRES_DB=database
+Environment=POSTGRES_USER=adventure
+Secret=adventurelog_db_password,type=env,target=POSTGRES_PASSWORD
+Network=homelab
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

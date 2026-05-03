@@ -1,0 +1,19 @@
+[Unit]
+Description=Immich Machine Learning
+After=immich-db.service
+
+[Container]
+Image=ghcr.io/immich-app/immich-machine-learning:release-cuda
+AutoUpdate=registry
+ContainerName=immich-machine-learning
+Network=homelab
+Volume=/opt/immich/ml-cache:/cache:Z
+AddDevice=nvidia.com/gpu=all
+Environment=MACHINE_LEARNING_DEVICE=cuda
+DNS=1.1.1.1
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

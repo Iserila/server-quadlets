@@ -1,0 +1,14 @@
+[Unit]
+Description=Immich Redis
+
+[Container]
+Image=docker.io/redis:6.2-alpine
+AutoUpdate=registry
+ContainerName=immich-redis
+Network=homelab
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target
