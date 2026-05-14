@@ -1,0 +1,17 @@
+[Unit]
+Description=Paperless Database
+
+[Container]
+Image=docker.io/library/postgres:16
+ContainerName=paperless-db
+Volume=/opt/paperless/db:/var/lib/postgresql/data:Z
+Environment=POSTGRES_DB=paperless
+Environment=POSTGRES_USER=paperless
+Secret=paperless_db_password,type=env,target=POSTGRES_PASSWORD
+Network=homelab
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

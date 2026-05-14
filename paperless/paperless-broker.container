@@ -1,0 +1,13 @@
+[Unit]
+Description=Paperless Redis Broker
+
+[Container]
+Image=docker.io/library/redis:7
+ContainerName=paperless-broker
+Network=homelab
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target
