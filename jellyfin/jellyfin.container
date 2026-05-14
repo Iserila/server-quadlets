@@ -1,0 +1,20 @@
+[Unit]
+Description=Jellyfin Media Server
+
+[Container]
+Image=lscr.io/linuxserver/jellyfin:latest
+ContainerName=jellyfin
+Network=homelab
+
+Volume=/opt/jellyfin/config:/config
+Volume=/mnt/data/media:/media:ro
+
+Environment=PUID=1000
+Environment=PGID=1000
+Environment=TZ=Europe/Amsterdam
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target
