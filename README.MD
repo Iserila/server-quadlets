@@ -19,8 +19,10 @@ A repurposed Lenovo IdeaPad S540 acting as a home server.
 - **Audiobookshelf** - audiobooks
 - **Directus** - CMS for Geteizem
 - **Immich** - photo management
+- **Jellyfin** - Media server
 - **Navidrome** - music server
 - **Nginx Proxy Manager** - reverse proxy
+- **Paperless-ngx** - Document management system
 - **Sure** - finances
 - **Uptime Kuma** - status page
 
@@ -42,6 +44,9 @@ NPM reaches all services by container name over the homelab network. No `Publish
 - `adventurelog_db_password`
 - `adventurelog_secret_key`
 - `adventurelog_admin_password`
+- `paperless_db_password`
+- `paperless_secret_key`
+- `paperless_admin_password`
 
 ## Misc notes
 - After editing any `.container` file, always run `systemctl --user daemon-reload`
