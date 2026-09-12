@@ -1,0 +1,39 @@
+[Unit]
+Description=Attic
+After=network-online.target attic-db.service
+Requires=attic-db.service
+
+[Container]
+Image=ghcr.io/lmmendes/attic:latest
+ContainerName=attic
+# Image entrypoint starts as root to apply PUID/PGID ownership, then drops privileges.
+User=0:0
+
+Volume=/opt/attic/uploads:/data/uploads:Z
+
+Environment=ATTIC_PORT=8080
+Environment=ATTIC_LOCAL_STORAGE_PATH=/data/uploads
+Environment=ATTIC_PUID=1000
+Environment=ATTIC_PGID=1000
+Environment=ATTIC_BASE_URL=https://attic.irisa.dev
+Environment=ATTIC_CORS_ORIGINS=https://attic.irisa.dev
+Environment=ATTIC_ADMIN_EMAIL=me@iserila.com
+Secret=attic_session_secret,type=env,target=ATTIC_SESSION_SECRET
+Secret=attic_admin_password,type=env,target=ATTIC_ADMIN_PASSWORD
+Secret=attic_db_password,type=mount,target=/run/secrets/attic_db_password
+
+# ATTIC_DATABASE_URL must embed the DB password inline (the app only accepts a
+# single connection-string env var, no _FILE convention), so it's built at
+# container start from the mounted secret file above instead of being written
+# into this file. This re-execs the image's normal entrypoint chain afterward.
+Entrypoint=/bin/sh
+Exec=-c 'export ATTIC_DATABASE_URL="postgres://attic:$(cat /run/secrets/attic_db_password)@attic-db:5432/attic?sslmode=disable"; exec /app/docker-entrypoint.sh /app/attic'
+
+Network=homelab
+
+[Service]
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=default.target
