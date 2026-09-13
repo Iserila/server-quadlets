@@ -12,6 +12,16 @@ Volume=/opt/freshrss/extensions:/var/www/FreshRSS/extensions:Z
 Environment=TZ=Europe/Amsterdam
 Environment=CRON_MIN=*/30
 
+# OIDC
+Environment=OIDC_ENABLED=1
+Environment=OIDC_PROVIDER_METADATA_URL=https://sso.irisa.dev/application/o/fresh-rss/.well-known/openid-configuration
+Environment=OIDC_X_FORWARDED_HEADERS="X-Forwarded-Proto X-Forwarded-Host"
+Environment=OIDC_SCOPES="openid email profile"
+Environment=OIDC_REMOTE_USER_CLAIM=preferred_username
+Secret=freshrss_oidc_client_id,type=env,target=OIDC_CLIENT_ID
+Secret=freshrss_oidc_client_secret,type=env,target=OIDC_CLIENT_SECRET
+Secret=freshrss_oidc_client_crypto_key,type=env,target=OIDC_CLIENT_CRYPTO_KEY
+
 [Service]
 Restart=always
 

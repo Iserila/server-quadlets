@@ -1,0 +1,17 @@
+[Unit]
+Description=Authentik Database
+
+[Container]
+Image=docker.io/library/postgres:16-alpine
+ContainerName=authentik-db
+Volume=/opt/authentik/db:/var/lib/postgresql/data:Z
+Environment=POSTGRES_DB=authentik
+Environment=POSTGRES_USER=authentik
+Secret=authentik_db_password,type=env,target=POSTGRES_PASSWORD
+Network=homelab
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

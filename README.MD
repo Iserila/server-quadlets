@@ -16,8 +16,11 @@ A repurposed Lenovo IdeaPad S540 acting as a home server.
 
 ## Services
 - **AdventureLog** - trip tracker
+- **Attic** - home inventory tracker
 - **Audiobookshelf** - audiobooks
+- **authentik** - SSO / identity provider
 - **Directus** - CMS for Geteizem
+- **FreshRSS** - RSS feed reader
 - **Immich** - photo management
 - **Jellyfin** - Media server
 - **Navidrome** - music server
@@ -33,9 +36,14 @@ All containers are on the `homelab` network. In Quadlet files, use `Network=home
 
 > (NOT `Network=homelab.network`, that creates a ghost `systemd-homelab` network instead).
 
+The `homelab.network` quadlet file itself needs `NetworkName=homelab` under `[Network]`, otherwise `podman network create` names it `systemd-homelab` (the quadlet's default naming convention) instead of `homelab`, and every container referencing `Network=homelab` fails with `unable to find network with name or ID homelab: network not found`.
+
 NPM reaches all services by container name over the homelab network. No `PublishPort` needed for proxied services, only for direct LAN access.
 
 ## Secrets
+- `attic_db_password`
+- `attic_session_secret`
+- `attic_admin_password`
 - `immich_db_password`
 - `sure_db_password`
 - `sure_secret_key_base`
@@ -47,6 +55,16 @@ NPM reaches all services by container name over the homelab network. No `Publish
 - `paperless_db_password`
 - `paperless_secret_key`
 - `paperless_admin_password`
+- `authentik_db_password`
+- `authentik_secret_key`
+- `authentik_bootstrap_password_hash`
+- `freshrss_oidc_client_id`
+- `freshrss_oidc_client_secret`
+- `freshrss_oidc_client_crypto_key`
+
+> `directus_db_password` is a special case: Directus needs its DB password embedded inside a plain env var, and Quadlet's `Secret=...,type=env,target=X` can only map a secret to one whole env var — it can't interpolate a value into part of a larger string. That one is pasted in as plaintext directly in `directus/directus.container`, so keep the secret and the plaintext value in sync if it's ever rotated.
+>
+> `attic_db_password` hits the same problem (Attic only accepts a single `ATTIC_DATABASE_URL` connection string, no `_FILE` convention) but avoids the plaintext-in-git issue: the secret is mounted as a *file* (`Secret=...,type=mount`) and `attic/attic.container` overrides the entrypoint to build `ATTIC_DATABASE_URL` from that file at container start, before re-exec'ing the image's normal startup chain. Prefer this pattern over pasting plaintext when an app's entrypoint is a simple enough shell script to wrap safely.
 
 ## Misc notes
 - After editing any `.container` file, always run `systemctl --user daemon-reload`
@@ -90,6 +108,26 @@ sudo chown -R iserila:iserila /opt/myapp/data
 # Right
 podman unshare chown -R 1000:1000 /opt/myapp/data
 ```
+
+### homelab network missing MASQUERADE / containers have no outbound internet
+Symptom: DNS resolution fails inside containers (`getent hosts google.com` returns nothing), NPM crash-loops trying to install the certbot cloudflare plugin, but the containers are running and the host itself has internet fine.
+
+Check for the NAT rule:
+```sh
+sudo iptables -t nat -L POSTROUTING -n -v
+```
+If empty (no MASQUERADE for the bridge subnet), netavark's NAT rule got wiped somehow. Fix by fully recreating the network:
+```sh
+systemctl --user stop <every service on homelab, see below>
+podman network rm homelab
+systemctl --user daemon-reload
+systemctl --user start homelab-network.service
+podman network ls   # confirm it shows `homelab`, not `systemd-homelab`
+systemctl --user start <every service on homelab>
+```
+No static IPs are used anywhere, so recreating the network is safe, containers just get fresh DHCP-style addresses from the bridge and find each other via container-name DNS as usual.
+
+> Root cause unconfirmed, suspect an iptables-nft/netavark interaction or a package update. Watch for recurrence.
 
 ### Immich upload/storage mount
 Immich expects its data at `/data` inside the container (not `/usr/src/app/upload`):

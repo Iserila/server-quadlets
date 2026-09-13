@@ -1,0 +1,27 @@
+[Unit]
+Description=Authentik Worker
+After=authentik-db.service
+
+[Container]
+Image=ghcr.io/goauthentik/server:2026.8.2
+ContainerName=authentik-worker
+Exec=worker
+User=root
+ShmSize=512m
+Volume=/opt/authentik/data:/data:Z
+Volume=/opt/authentik/templates:/templates:Z
+Volume=/opt/authentik/certs:/certs:Z
+Environment=AUTHENTIK_POSTGRESQL__HOST=authentik-db
+Environment=AUTHENTIK_POSTGRESQL__NAME=authentik
+Environment=AUTHENTIK_POSTGRESQL__USER=authentik
+Environment=AUTHENTIK_ERROR_REPORTING__ENABLED=false
+Secret=authentik_db_password,type=env,target=AUTHENTIK_POSTGRESQL__PASSWORD
+Secret=authentik_secret_key,type=env,target=AUTHENTIK_SECRET_KEY
+Secret=authentik_bootstrap_password_hash,type=env,target=AUTHENTIK_BOOTSTRAP_PASSWORD_HASH
+Network=homelab
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target
