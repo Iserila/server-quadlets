@@ -1,0 +1,33 @@
+[Unit]
+Description=Ollama
+
+[Container]
+Image=docker.io/ollama/ollama:latest
+ContainerName=ollama
+Network=homelab
+
+AddDevice=nvidia.com/gpu=all
+
+Volume=/opt/ollama/data:/root/.ollama:Z
+
+Environment=OLLAMA_CONTEXT_LENGTH=4096
+
+# Ollama's underlying llama.cpp engine reserves a 1024 MiB per-device safety
+# margin by default (--fit-target / LLAMA_ARG_FIT_TARGET) before deciding how
+# many layers fit on GPU. On this dedicated, single-purpose inference box
+# nothing else touches the GPU, so the default margin is unnecessarily large
+# and was pushing 4/37 qwen3:4b layers onto CPU even though they fit. Lowered
+# to keep the whole model on GPU; verified via `ollama ps` (100% GPU) after
+# changing this.
+Environment=LLAMA_ARG_FIT_TARGET=256
+
+# No PublishPort: internal only, reachable from other containers on the
+# homelab network by name. Ollama has no built-in auth so it must never be
+# exposed via NPM or the WireGuard tunnel. Open WebUI is the auth-gated
+# front door.
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

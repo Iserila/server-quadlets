@@ -1,0 +1,23 @@
+[Unit]
+Description=Open WebUI
+After=ollama.service
+Requires=ollama.service
+
+[Container]
+Image=ghcr.io/open-webui/open-webui:v0.11.3
+ContainerName=open-webui
+Network=homelab
+
+Volume=/opt/open-webui/data:/app/backend/data:Z
+
+Environment=OLLAMA_BASE_URL=http://ollama:11434
+Secret=openwebui_secret_key,type=env,target=WEBUI_SECRET_KEY
+
+# No PublishPort: NPM reaches it by container name over homelab, same as
+# every other proxied service.
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

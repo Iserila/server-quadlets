@@ -25,6 +25,8 @@ A repurposed Lenovo IdeaPad S540 acting as a home server.
 - **Jellyfin** - Media server
 - **Navidrome** - music server
 - **Nginx Proxy Manager** - reverse proxy
+- **Ollama** - local LLM inference (GPU-accelerated), internal only, no auth
+- **Open WebUI** - chat UI + OpenAI-compatible API gateway in front of Ollama
 - **Paperless-ngx** - Document management system
 - **Sure** - finances
 - **Uptime Kuma** - status page
@@ -61,10 +63,21 @@ NPM reaches all services by container name over the homelab network. No `Publish
 - `freshrss_oidc_client_id`
 - `freshrss_oidc_client_secret`
 - `freshrss_oidc_client_crypto_key`
+- `openwebui_secret_key` (JWT signing key)
 
 > `directus_db_password` is a special case: Directus needs its DB password embedded inside a plain env var, and Quadlet's `Secret=...,type=env,target=X` can only map a secret to one whole env var — it can't interpolate a value into part of a larger string. That one is pasted in as plaintext directly in `directus/directus.container`, so keep the secret and the plaintext value in sync if it's ever rotated.
 >
 > `attic_db_password` hits the same problem (Attic only accepts a single `ATTIC_DATABASE_URL` connection string, no `_FILE` convention) but avoids the plaintext-in-git issue: the secret is mounted as a *file* (`Secret=...,type=mount`) and `attic/attic.container` overrides the entrypoint to build `ATTIC_DATABASE_URL` from that file at container start, before re-exec'ing the image's normal startup chain. Prefer this pattern over pasting plaintext when an app's entrypoint is a simple enough shell script to wrap safely.
+
+## GPU passthrough (Ollama)
+The GTX 1650 (4GB VRAM) is passed into the rootless `ollama` container via CDI, using `AddDevice=nvidia.com/gpu=all` in `ollama/ollama.container` — not `--privileged --gpus=all`, that's unnecessary with CDI and works against rootless least-privilege.
+
+Prerequisites (already satisfied on this host, but if setting this up again elsewhere):
+- NVIDIA driver + `nvidia-container-toolkit` installed (`nvidia-smi`, `nvidia-ctk --version`).
+- CDI spec generated: `sudo nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml`. Must be regenerated after any driver update (the spec embeds the exact driver version in its library-mount paths and hooks).
+- **The invoking user must be in the `render` group**, not just `video`. The CDI device bundles `/dev/nvidia0` together with `/dev/dri/card1` *and* `/dev/dri/renderD129`, and the render node is `crw-rw---- root:render`. Without `render` group membership, rootless Podman can't bind-mount it in and the container fails to start. Fix: `sudo usermod -aG render <user>` then `sudo systemctl restart user@1000.service` (the running `systemd --user` manager snapshots its groups at start, so a plain re-login of the SSH session isn't enough — the user manager itself needs to restart).
+
+Ollama's own memory-fit logic (`LLAMA_ARG_FIT_TARGET`, default 1024MiB) reserves a per-device safety margin before deciding how many layers to put on GPU vs CPU — on this 4GB card that margin alone pushed several qwen3:4b layers to CPU even though the model fits. Since nothing else uses this GPU, `ollama/ollama.container` lowers it to 256MiB (`Environment=LLAMA_ARG_FIT_TARGET=256`) to get the full model on GPU. Verify with `podman exec ollama ollama ps` — should show `100% GPU`, not a CPU/GPU split.
 
 ## Misc notes
 - After editing any `.container` file, always run `systemctl --user daemon-reload`
