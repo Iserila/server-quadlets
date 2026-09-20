@@ -3,7 +3,7 @@ Description=Immich Server
 After=immich-db.service immich-redis.service
 
 [Container]
-Image=ghcr.io/immich-app/immich-server:release
+Image=ghcr.io/immich-app/immich-server:v3.1.0
 AutoUpdate=registry
 ContainerName=immich-server
 Network=homelab

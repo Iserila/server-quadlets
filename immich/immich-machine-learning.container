@@ -3,7 +3,7 @@ Description=Immich Machine Learning
 After=immich-db.service
 
 [Container]
-Image=ghcr.io/immich-app/immich-machine-learning:release-cuda
+Image=ghcr.io/immich-app/immich-machine-learning:v3.1.0-cuda
 AutoUpdate=registry
 ContainerName=immich-machine-learning
 Network=homelab

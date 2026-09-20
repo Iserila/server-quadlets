@@ -2,11 +2,12 @@
 Description=Immich Database
 
 [Container]
-Image=docker.io/tensorchord/pgvecto-rs:pg14-v0.2.0
+Image=ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0
 AutoUpdate=registry
 ContainerName=immich-db
 Network=homelab
 Volume=/opt/immich/db:/var/lib/postgresql/data:Z
+ShmSize=128m
 
 # ENV
 Environment=TZ=Europe/Amsterdam
@@ -19,7 +20,6 @@ Environment=DB_DATABASE_NAME=immich
 Secret=immich_db_password,type=env,target=DB_PASSWORD
 # Test
 Environment=DB_HOSTNAME=localhost
-Environment=POSTGRES_USER=immich
 Environment=POSTGRES_USER=immich
 Environment=POSTGRES_DB=immich
 Secret=immich_db_password,type=env,target=POSTGRES_PASSWORD
