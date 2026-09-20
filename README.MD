@@ -20,6 +20,7 @@ A repurposed Lenovo IdeaPad S540 acting as a home server.
 - **Audiobookshelf** - audiobooks
 - **authentik** - SSO / identity provider
 - **Directus** - CMS for Geteizem
+- **Faved** - bookmark manager
 - **FreshRSS** - RSS feed reader
 - **Immich** - photo management
 - **Jellyfin** - Media server
@@ -149,6 +150,12 @@ Volume=/opt/immich/upload:/data:Z
 Volume=/mnt/data/photos:/data/library:Z  # photos on 2nd drive
 ```
 On fresh install, Immich creates its own `.immich` marker files - no need to create them manually.
+
+### Faved: "unable to open database file" on setup
+Faved's Apache worker processes run as `www-data` (uid/gid 33) inside the container, not root, so the storage volume needs to be owned by that UID in the container's user namespace before clicking "Create Database":
+```sh
+podman unshare chown -R 33:33 /opt/faved/storage
+```
 
 ### Creating Podman secrets
 ```sh

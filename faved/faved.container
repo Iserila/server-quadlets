@@ -1,0 +1,15 @@
+[Unit]
+Description=Faved
+
+[Container]
+Image=docker.io/denho/faved:latest
+ContainerName=faved
+Network=homelab
+
+Volume=/opt/faved/storage:/var/www/html/storage:Z
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target
