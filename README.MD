@@ -29,6 +29,7 @@ A repurposed Lenovo IdeaPad S540 acting as a home server.
 - **Ollama** - local LLM inference (GPU-accelerated), internal only, no auth
 - **Open WebUI** - chat UI + OpenAI-compatible API gateway in front of Ollama
 - **Paperless-ngx** - Document management system
+- **RustFS** - S3-compatible object storage
 - **Sure** - finances
 - **Uptime Kuma** - status page
 
@@ -65,6 +66,8 @@ NPM reaches all services by container name over the homelab network. No `Publish
 - `freshrss_oidc_client_secret`
 - `freshrss_oidc_client_crypto_key`
 - `openwebui_secret_key` (JWT signing key)
+- `rustfs_access_key`
+- `rustfs_secret_key`
 
 > `directus_db_password` is a special case: Directus needs its DB password embedded inside a plain env var, and Quadlet's `Secret=...,type=env,target=X` can only map a secret to one whole env var — it can't interpolate a value into part of a larger string. That one is pasted in as plaintext directly in `directus/directus.container`, so keep the secret and the plaintext value in sync if it's ever rotated.
 >

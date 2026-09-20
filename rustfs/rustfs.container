@@ -1,0 +1,21 @@
+[Unit]
+Description=RustFS Object Storage
+
+[Container]
+Image=rustfs/rustfs:1.0.0
+ContainerName=rustfs
+Network=homelab
+
+Volume=/opt/rustfs/data:/data:Z
+Volume=/opt/rustfs/logs:/logs:Z
+
+Secret=rustfs_access_key,type=env,target=RUSTFS_ACCESS_KEY
+Secret=rustfs_secret_key,type=env,target=RUSTFS_SECRET_KEY
+
+Exec=/data
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target
