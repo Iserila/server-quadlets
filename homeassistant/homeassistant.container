@@ -1,0 +1,17 @@
+[Unit]
+Description=Home Assistant
+
+[Container]
+Image=ghcr.io/home-assistant/home-assistant:stable
+ContainerName=homeassistant
+Network=host
+
+Volume=/opt/homeassistant/config:/config:Z
+
+Environment=TZ=Europe/Amsterdam
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

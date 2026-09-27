@@ -22,6 +22,7 @@ A repurposed Lenovo IdeaPad S540 acting as a home server.
 - **Directus** - CMS for Geteizem
 - **Faved** - bookmark manager
 - **FreshRSS** - RSS feed reader
+- **Home Assistant** - home automation (host networking, see Networking section)
 - **Immich** - photo management
 - **Jellyfin** - Media server
 - **Navidrome** - music server
@@ -43,6 +44,12 @@ All containers are on the `homelab` network. In Quadlet files, use `Network=home
 The `homelab.network` quadlet file itself needs `NetworkName=homelab` under `[Network]`, otherwise `podman network create` names it `systemd-homelab` (the quadlet's default naming convention) instead of `homelab`, and every container referencing `Network=homelab` fails with `unable to find network with name or ID homelab: network not found`.
 
 NPM reaches all services by container name over the homelab network. No `PublishPort` needed for proxied services, only for direct LAN access.
+
+**Exception: Home Assistant** uses `Network=host` instead of the `homelab` bridge, so mDNS/SSDP-based local device discovery (HomeKit, Chromecast, Sonos, etc.) works. It's not reachable by container-name DNS as a result.
+
+NPM's proxy host for it must forward to the literal pasta gateway IP `169.254.1.2` (port `8123`), **not** the `host-gateway` hostname, even though NPM's own quadlet has `AddHost=host-gateway:host-gateway` and that entry resolves fine via `getent`/`curl` inside the container. NPM's nginx config uses a variable `proxy_pass`, which resolves the upstream at request time through nginx's own DNS resolver — that resolver never consults `/etc/hosts`, so a hostname that only exists as a hosts-file alias (like `host-gateway`) gets NXDOMAIN and a 502, even though it works for any tool that goes through libc's resolver. Always use the raw IP for host-networked apps behind NPM.
+
+HA also rejects proxied requests by default (`400`, logged as "HTTP integration is not set-up for reverse proxies") until it trusts the proxy's IP. **This can no longer be configured via `configuration.yaml`** — HA's `http` integration migrates its reverse-proxy config to internal storage on first boot and ignores YAML for it from then on (editing the YAML just produces a silently-ignored change plus a "YAML is being ignored" repair item). Fix it via the UI instead: log in directly at `http://<server-lan-ip>:8123` (bypassing NPM, since a direct request carries no `X-Forwarded-For` and sails through unchecked) and go to **Settings → System → Network** to enable "Use X-Forwarded-For" and add the proxy's IP (as seen by HA once pasta forwards it — the host's own LAN IP, not the container-side pasta address) as a trusted proxy. Saving restarts HA to trial the change; confirm it within 5 minutes (via `https://ha.irisa.dev`) or it auto-reverts.
 
 ## Secrets
 - `attic_db_password`
@@ -158,6 +165,12 @@ On fresh install, Immich creates its own `.immich` marker files - no need to cre
 Faved's Apache worker processes run as `www-data` (uid/gid 33) inside the container, not root, so the storage volume needs to be owned by that UID in the container's user namespace before clicking "Create Database":
 ```sh
 podman unshare chown -R 33:33 /opt/faved/storage
+```
+
+### Home Assistant (or any host-networked app) 502s in NPM after an update/reboot
+The pasta gateway IP used for the `ha.irisa.dev` proxy host (`169.254.1.2`) is a pasta/podman default, not a guaranteed-stable value. Recheck it and update the NPM proxy host's Forward Hostname/IP if it drifted:
+```sh
+podman exec systemd-nginx-proxy-manager getent hosts host-gateway
 ```
 
 ### Creating Podman secrets
