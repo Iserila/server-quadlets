@@ -1,0 +1,18 @@
+[Unit]
+Description=Crab Fit API
+
+[Container]
+Image=crabfit-api.build
+ContainerName=crabfit-api
+Volume=/opt/crabfit/data:/data:Z
+Environment=DATABASE_URL=sqlite:///data/crabfit.db?mode=rwc
+Environment=FRONTEND_URL=https://crab.irisa.dev
+# API only handles Ctrl+C for graceful shutdown, SIGTERM hangs until SIGKILL
+StopSignal=SIGINT
+Network=homelab
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

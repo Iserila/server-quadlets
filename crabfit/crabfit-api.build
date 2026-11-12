@@ -1,0 +1,11 @@
+[Unit]
+Description=Crab Fit API image build
+
+[Build]
+ImageTag=localhost/crabfit-api:latest
+File=crabfit-api.Containerfile
+SetWorkingDirectory=unit
+
+[Service]
+# Compiling the Rust API from scratch takes a while on this CPU
+TimeoutStartSec=1h

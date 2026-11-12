@@ -1,0 +1,14 @@
+[Unit]
+Description=Crab Fit Frontend
+After=crabfit-api.service
+
+[Container]
+Image=crabfit-frontend.build
+ContainerName=crabfit-frontend
+Network=homelab
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,13 @@
+[Unit]
+Description=Crab Fit Frontend image build
+
+[Build]
+ImageTag=localhost/crabfit-frontend:latest
+File=crabfit-frontend.Containerfile
+SetWorkingDirectory=unit
+# BuildArg= needs Podman >= 5.5, this host has 5.4
+PodmanArgs=--build-arg NEXT_PUBLIC_API_URL=https://crab-api.irisa.dev
+PodmanArgs=--build-arg FRONTEND_URL=https://crab.irisa.dev
+
+[Service]
+TimeoutStartSec=1h
