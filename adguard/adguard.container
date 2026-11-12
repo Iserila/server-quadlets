@@ -1,0 +1,16 @@
+[Unit]
+Description=AdGuard Home
+
+[Container]
+Image=docker.io/adguard/adguardhome:latest
+ContainerName=adguard
+Network=host
+
+Volume=/opt/adguard/work:/opt/adguardhome/work:Z
+Volume=/opt/adguard/conf:/opt/adguardhome/conf:Z
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target
