@@ -1,0 +1,31 @@
+[Unit]
+Description=Seafile MariaDB Database
+After=network-online.target
+
+[Container]
+Image=docker.io/library/mariadb:10.11
+ContainerName=seafile-db
+
+Volume=/opt/seafile/db:/var/lib/mysql:Z
+
+Environment=MYSQL_LOG_CONSOLE=true
+Environment=MARIADB_AUTO_UPGRADE=1
+Secret=seafile_db_root_password,type=env,target=MYSQL_ROOT_PASSWORD
+
+Network=homelab
+
+HealthCmd=/usr/local/bin/healthcheck.sh --connect --mariadbupgrade --innodb_initialized
+HealthInterval=20s
+HealthRetries=10
+HealthStartPeriod=30s
+HealthTimeout=5s
+# Only report the unit as started once healthy, so seafile/seadoc wait for it
+# (equivalent of the official compose's `condition: service_healthy`).
+Notify=healthy
+
+[Service]
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=default.target

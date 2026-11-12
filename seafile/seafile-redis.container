@@ -1,0 +1,15 @@
+[Unit]
+Description=Seafile Redis Cache
+
+[Container]
+Image=docker.io/library/redis:latest
+ContainerName=seafile-redis
+# Pure cache, no persistence (same flags as the official seafile-server.yml).
+Exec=redis-server --save "" --appendonly no
+Network=homelab
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,28 @@
+[Unit]
+Description=Seafile SeaDoc Server
+After=seafile-db.service seafile.service
+Requires=seafile-db.service
+
+[Container]
+Image=docker.io/seafileltd/sdoc-server:2.0-latest
+ContainerName=seadoc
+
+Volume=/opt/seafile/seadoc:/shared:Z
+
+Environment=DB_HOST=seafile-db
+Environment=DB_PORT=3306
+Environment=DB_USER=seafile
+Environment=DB_NAME=seahub_db
+Environment=TIME_ZONE=Europe/Amsterdam
+Environment=NON_ROOT=false
+Environment=SEAHUB_SERVICE_URL=http://seafile
+Secret=seafile_db_password,type=env,target=DB_PASSWORD
+Secret=seafile_jwt_private_key,type=env,target=JWT_PRIVATE_KEY
+
+Network=homelab
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

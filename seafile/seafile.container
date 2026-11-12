@@ -1,0 +1,51 @@
+[Unit]
+Description=Seafile Server
+After=seafile-db.service seafile-redis.service
+Requires=seafile-db.service
+
+[Container]
+Image=docker.io/seafileltd/seafile-mc:13.0-latest
+ContainerName=seafile
+
+# Whole /shared (conf, logs, file data) on the data drive. The file data can't
+# be split out into its own nested mount: bootstrap skips first-time setup if
+# /shared/seafile/seafile-data already exists.
+Volume=/mnt/data/seafile:/shared:Z
+
+Environment=SEAFILE_SERVER_HOSTNAME=seafile.irisa.dev
+Environment=SEAFILE_SERVER_PROTOCOL=https
+Environment=TIME_ZONE=Europe/Amsterdam
+Environment=SEAFILE_MYSQL_DB_HOST=seafile-db
+Environment=SEAFILE_MYSQL_DB_PORT=3306
+Environment=SEAFILE_MYSQL_DB_USER=seafile
+Environment=SEAFILE_MYSQL_DB_CCNET_DB_NAME=ccnet_db
+Environment=SEAFILE_MYSQL_DB_SEAFILE_DB_NAME=seafile_db
+Environment=SEAFILE_MYSQL_DB_SEAHUB_DB_NAME=seahub_db
+Environment=CACHE_PROVIDER=redis
+Environment=REDIS_HOST=seafile-redis
+Environment=REDIS_PORT=6379
+Environment=ENABLE_GO_FILESERVER=true
+Environment=ENABLE_SEADOC=true
+Environment=SEADOC_SERVER_URL=https://seafile.irisa.dev/sdoc-server
+Environment=ENABLE_NOTIFICATION_SERVER=false
+Environment=NON_ROOT=false
+Environment=INIT_SEAFILE_ADMIN_EMAIL=me@iserila.com
+Secret=seafile_db_password,type=env,target=SEAFILE_MYSQL_DB_PASSWORD
+Secret=seafile_db_root_password,type=env,target=INIT_SEAFILE_MYSQL_ROOT_PASSWORD
+Secret=seafile_admin_password,type=env,target=INIT_SEAFILE_ADMIN_PASSWORD
+Secret=seafile_jwt_private_key,type=env,target=JWT_PRIVATE_KEY
+
+Network=homelab
+
+HealthCmd=curl -f http://localhost:80 || exit 1
+HealthInterval=30s
+HealthRetries=3
+HealthStartPeriod=10s
+HealthTimeout=10s
+
+[Service]
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=default.target
