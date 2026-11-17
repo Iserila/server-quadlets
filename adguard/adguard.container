@@ -2,7 +2,7 @@
 Description=AdGuard Home
 
 [Container]
-Image=docker.io/adguard/adguardhome:latest
+Image=docker.io/adguard/adguardhome:v0.107.80
 ContainerName=adguard
 Network=host
 

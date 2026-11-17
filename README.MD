@@ -18,13 +18,10 @@ A repurposed Lenovo IdeaPad S540 acting as a home server.
 ## Services
 
 - **AdGuard Home** - network-wide DNS ad blocking, the router hands it out as LAN DNS (host networking, see Networking section)
-- **AdventureLog** - trip tracker
-- **Attic** - home inventory tracker
 - **Audiobookshelf** - audiobooks
 - **authentik** - SSO / identity provider
 - **Crab Fit** - group availability scheduler (built from source)
 - **Directus** - CMS for Geteizem
-- **Faved** - bookmark manager
 - **FreshRSS** - RSS feed reader
 - **Home Assistant** - home automation (host networking, see Networking section)
 - **Immich** - photo management
@@ -62,17 +59,11 @@ HA also rejects proxied requests by default (`400`, logged as "HTTP integration 
 
 ## Secrets
 
-- `attic_db_password`
-- `attic_session_secret`
-- `attic_admin_password`
 - `immich_db_password`
 - `sure_db_password`
 - `sure_secret_key_base`
 - `directus_secret` (Geteizem CMS)
 - `directus_db_password` (Geteizem CMS DB)
-- `adventurelog_db_password`
-- `adventurelog_secret_key`
-- `adventurelog_admin_password`
 - `paperless_db_password`
 - `paperless_secret_key`
 - `paperless_admin_password`
@@ -93,7 +84,13 @@ HA also rejects proxied requests by default (`400`, logged as "HTTP integration 
 
 > `directus_db_password` is a special case: Directus needs its DB password embedded inside a plain env var, and Quadlet's `Secret=...,type=env,target=X` can only map a secret to one whole env var — it can't interpolate a value into part of a larger string. That one is pasted in as plaintext directly in `directus/directus.container`, so keep the secret and the plaintext value in sync if it's ever rotated.
 >
-> `attic_db_password` hits the same problem (Attic only accepts a single `ATTIC_DATABASE_URL` connection string, no `_FILE` convention) but avoids the plaintext-in-git issue: the secret is mounted as a _file_ (`Secret=...,type=mount`) and `attic/attic.container` overrides the entrypoint to build `ATTIC_DATABASE_URL` from that file at container start, before re-exec'ing the image's normal startup chain. Prefer this pattern over pasting plaintext when an app's entrypoint is a simple enough shell script to wrap safely.
+> A cleaner fix for apps that only accept a single connection-string env var (no `_FILE` convention): mount the secret as a _file_ (`Secret=...,type=mount`) and override the entrypoint to build the env var from that file at container start, then re-exec the image's normal startup chain. This keeps the plaintext out of git. Prefer it over pasting plaintext when an app's entrypoint is a simple enough shell script to wrap safely:
+>
+> ```ini
+> Secret=app_db_password,type=mount,target=/run/secrets/app_db_password
+> Entrypoint=/bin/sh
+> Exec=-c 'export DATABASE_URL="postgres://app:$(cat /run/secrets/app_db_password)@app-db:5432/app"; exec /app/docker-entrypoint.sh /app/server'
+> ```
 
 ## GPU passthrough (Ollama)
 
@@ -198,14 +195,6 @@ Volume=/mnt/data/photos:/data/library:Z  # photos on 2nd drive
 ```
 
 On fresh install, Immich creates its own `.immich` marker files - no need to create them manually.
-
-### Faved: "unable to open database file" on setup
-
-Faved's Apache worker processes run as `www-data` (uid/gid 33) inside the container, not root, so the storage volume needs to be owned by that UID in the container's user namespace before clicking "Create Database":
-
-```sh
-podman unshare chown -R 33:33 /opt/faved/storage
-```
 
 ### Home Assistant (or any host-networked app) 502s in NPM after an update/reboot
 

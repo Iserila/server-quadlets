@@ -2,7 +2,7 @@
 Description=FreshRSS
 
 [Container]
-Image=docker.io/freshrss/freshrss:latest
+Image=docker.io/freshrss/freshrss:1.30.4
 ContainerName=freshrss
 Network=homelab
 

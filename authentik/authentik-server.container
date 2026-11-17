@@ -3,7 +3,7 @@ Description=Authentik Server
 After=authentik-db.service
 
 [Container]
-Image=ghcr.io/goauthentik/server:2026.8.2
+Image=ghcr.io/goauthentik/server:2026.8.5
 ContainerName=authentik-server
 Exec=server
 ShmSize=512m

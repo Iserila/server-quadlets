@@ -2,7 +2,7 @@
 Description=RustFS Object Storage
 
 [Container]
-Image=rustfs/rustfs:1.0.0
+Image=rustfs/rustfs:1.0.6
 ContainerName=rustfs
 Network=homelab
 
