@@ -2,7 +2,7 @@
 Description=Home Assistant
 
 [Container]
-Image=ghcr.io/home-assistant/home-assistant:stable
+Image=ghcr.io/home-assistant/home-assistant:2026.11.2
 ContainerName=homeassistant
 Network=host
 

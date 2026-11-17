@@ -2,7 +2,7 @@
 Description=Audiobookshelf
 
 [Container]
-Image=ghcr.io/advplyr/audiobookshelf:latest
+Image=ghcr.io/advplyr/audiobookshelf:2.37.2
 ContainerName=audiobookshelf
 Volume=/mnt/data/audiobooks:/audiobooks
 Volume=/mnt/data/podcasts:/podcasts
