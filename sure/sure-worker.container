@@ -3,7 +3,7 @@ Description=Sure Worker
 After=sure-db.service sure-redis.service
 
 [Container]
-Image=ghcr.io/we-promise/sure:stable
+Image=ghcr.io/we-promise/sure:0.7.6-hotfix.1
 ContainerName=sure-worker
 Exec=bundle exec sidekiq
 Volume=/opt/sure/storage:/rails/storage
@@ -17,6 +17,7 @@ Environment=DB_PORT=5432
 Environment=REDIS_URL=redis://sure-redis:6379/1
 Environment=OPENAI_REQUEST_TIMEOUT=300
 Environment=AI_RESPONSE_TIMEOUT=300
+Environment=POSTHOG_FEEDBACK_ENABLED=false
 Secret=sure_db_password,type=env,target=POSTGRES_PASSWORD
 Secret=sure_secret_key_base,type=env,target=SECRET_KEY_BASE
 DNS=8.8.8.8
