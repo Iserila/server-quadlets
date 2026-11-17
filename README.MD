@@ -37,6 +37,7 @@ A repurposed Lenovo IdeaPad S540 acting as a home server.
 - **RustFS** - S3-compatible object storage
 - **Seafile** - file sync & share (+ SeaDoc for online docs)
 - **Sure** - finances
+- **Tansu** - personal management shell (my own project, private image on ghcr.io)
 - **Uptime Kuma** - status page
 
 ## Networking
@@ -88,6 +89,7 @@ HA also rejects proxied requests by default (`400`, logged as "HTTP integration 
 - `seafile_db_root_password` (MariaDB root, Seafile uses it once on first start to create its DBs/user)
 - `seafile_admin_password` (initial admin `me@iserila.com`, first start only)
 - `seafile_jwt_private_key` (shared by seafile and seadoc, must match)
+- `tansu_app_secret` (root secret, `openssl rand -base64 32`, also keep a copy in the password manager)
 
 > `directus_db_password` is a special case: Directus needs its DB password embedded inside a plain env var, and Quadlet's `Secret=...,type=env,target=X` can only map a secret to one whole env var — it can't interpolate a value into part of a larger string. That one is pasted in as plaintext directly in `directus/directus.container`, so keep the secret and the plaintext value in sync if it's ever rotated.
 >
@@ -324,6 +326,34 @@ Notes:
 - The API rate limit (burst 20, +1 per 500ms) is keyed on peer IP, which is always NPM's, so every user shares one bucket. Fine for a few people.
 - Events not visited in 3 months are only removed when something calls `GET https://crab-api.irisa.dev/tasks/cleanup`. Nothing schedules that yet.
 - The frontend includes Vercel's `<Analytics/>`, whose script 404s here. That's harmless.
+
+### Tansu setup
+
+Private image from `ghcr.io/iserila/tansu`. Log in with a GitHub PAT that has `read:packages`, using `--authfile` so the login survives reboots (the default authfile lives in `$XDG_RUNTIME_DIR` and is wiped):
+
+```sh
+podman login --authfile ~/.config/containers/auth.json ghcr.io
+```
+
+First run:
+
+```sh
+sudo mkdir -p /opt/tansu/data && sudo chown -R iserila:iserila /opt/tansu
+mkdir -p -m 0700 /mnt/data/tansu/backups
+podman unshare chown -R 1000:1000 /opt/tansu/data /mnt/data/tansu/backups   # runs as uid 1000 "node"
+openssl rand -base64 32 | tr -d '\n' | podman secret create tansu_app_secret -
+systemctl --user daemon-reload
+systemctl --user start tansu
+podman exec tansu node /app/healthcheck.mjs
+```
+
+NPM proxy host `tansu.irisa.dev` → `tansu:3000` (SSL on). `TANSU_TRUST_PROXY=1` matches that single proxy hop.
+
+Notes:
+
+- `AutoUpdate=registry` + `Notify=healthy`: `podman-auto-update.timer` pulls a new `latest` and rolls back if it doesn't get healthy. Updates can run migrations, so check that snapshots show up in `/mnt/data/tansu/backups` before enabling the timer. Pin a tag (e.g. `:v0.1.0`) in `Image=` to stay on or roll back to a version.
+- The container is hardened (read-only root, no capabilities, `--memory=768m`). From Podman 5.5 on, `PodmanArgs=--memory=768m` can become `Memory=768m`.
+- Copy the backups off this host too.
 
 ### Creating Podman secrets
 

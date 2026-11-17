@@ -1,0 +1,46 @@
+[Unit]
+Description=Tansu
+
+[Container]
+# Private image, pulled with the ghcr.io login in ~/.config/containers/auth.json
+Image=ghcr.io/iserila/tansu:latest
+# Rolls back to the previous image if the new one doesn't get healthy (Notify=healthy).
+# Updates can run migrations, so make sure backups work first.
+AutoUpdate=registry
+ContainerName=tansu
+Network=homelab
+
+Volume=/opt/tansu/data:/data:Z
+# DB snapshots on the data drive
+Volume=/mnt/data/tansu/backups:/backups:Z
+
+Environment=TANSU_PUBLIC_ORIGIN=https://tansu.irisa.dev
+# Number of proxies in front (NPM)
+Environment=TANSU_TRUST_PROXY=1
+Secret=tansu_app_secret,type=env,target=NUXT_APP_SECRET
+
+# Hardening: read-only root (tmpfs on /tmp, /run etc.), only /data and /backups writable
+ReadOnly=true
+ReadOnlyTmpfs=true
+DropCapability=all
+NoNewPrivileges=true
+# Password hashes take 128 MiB each, 2 at once. Podman 5.4 has no Memory= key yet (5.5+)
+PodmanArgs=--memory=768m
+
+# The registry image format drops the image's HEALTHCHECK, so declare it here
+HealthCmd=node /app/healthcheck.mjs
+HealthInterval=30s
+HealthRetries=3
+HealthStartPeriod=20s
+HealthTimeout=10s
+HealthOnFailure=kill
+# Only report started once healthy, so a broken update fails and auto-update rolls back
+Notify=healthy
+
+[Service]
+Restart=always
+# First start includes the pull, a pre-migrate snapshot and migrations
+TimeoutStartSec=300
+
+[Install]
+WantedBy=default.target
